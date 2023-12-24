@@ -1,1 +1,1 @@
-# SporifyAutomatedETL
+# SpotifyAutomatedETL
