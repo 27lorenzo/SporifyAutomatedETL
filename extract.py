@@ -2,7 +2,6 @@ import pandas as pd
 import requests
 from datetime import datetime, timedelta
 import config
-from urllib.parse import urlencode
 import time
 import json
 import os
@@ -26,9 +25,9 @@ def get_access_token():
     # If no existing session or expired, perform Authorization Code Flow
 
     print(f"Please, visit the following link to authorize the application:\n{auth_url}")
-    while not os.path.exists("authorization_code.txt"):
+    while not os.path.exists("session/authorization_code.txt"):
         time.sleep(1)
-    with open("authorization_code.txt", "r") as file:
+    with open("session/authorization_code.txt", "r") as file:
         authorization_code = file.read().strip()
 
     print(f"Authorization code obtained: {authorization_code}")
@@ -82,18 +81,18 @@ def refresh_access_token(refresh_token):
 
 def load_session():
     try:
-        with open("session.json", "r") as file:
+        with open("session/session.json", "r") as file:
             return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         return None
 
 
 def save_session(session):
-    with open("session.json", "w") as file:
+    with open("session/session.json", "w") as file:
         json.dump(session, file)
 
 
-def send_request(access_token):
+def send_request(access_token, limit=50):
 
     headers = {
         'Authorization': 'Bearer {}'.format(access_token)
@@ -102,9 +101,14 @@ def send_request(access_token):
     yesterday = today - timedelta(days=1)
     yesterday_unix_timestamp = int(yesterday.timestamp()) * 1000
 
-    endpoint = f'me/player/recently-played?limit=50&after={yesterday_unix_timestamp}'
-    recently_played_url = ''.join([base_url, endpoint])
-    r = requests.get(recently_played_url, headers=headers)
+    endpoint_rp = f'me/player/recently-played?limit=50&after={yesterday_unix_timestamp}'
+    endpoint_ls = 'me/tracks'
+    url = ''.join([base_url, endpoint_ls])
+    print(f"Request URL: {url}")
+    params = {
+        'limit': limit
+    }
+    r = requests.get(url, headers=headers, params=params)
     if r.status_code == 401:
         print("Error 401: Unauthorized. Token may be invalid.")
     elif r.status_code == 403:
@@ -114,7 +118,7 @@ def send_request(access_token):
     return r
 
 
-def parse_response(r):
+def parse_response_recently_played(r):
     if r.status_code != 200:
         print(f"Error: {r.status_code}")
         return None
@@ -148,10 +152,41 @@ def parse_response(r):
     return song_df
 
 
+def parse_response_liked_songs(r):
+    if r.status_code != 200:
+        print(f"Error: {r.status_code}")
+        return None
+
+    try:
+        data = r.json()
+    except requests.exceptions.JSONDecodeError:
+        print("Error decoding JSON")
+        return None
+    song_names = []
+    artist_names = []
+    timestamps = []
+
+    # Extracting only the relevant bits of data from the json object
+    for song in data["items"]:
+        song_names.append(song["track"]["name"])
+        artist_names.append(song["track"]["album"]["artists"][0]["name"])
+        timestamps.append(song["added_at"])
+
+    # Prepare a dictionary in order to turn it into a pandas dataframe below
+    songs_dict = {
+        "song_name": song_names,
+        "artist_name": artist_names,
+        "timestamp": timestamps
+    }
+    liked_songs_df = pd.DataFrame(songs_dict, columns=["song_name", "artist_name", "timestamp"])
+    print(liked_songs_df.to_string())
+    return liked_songs_df
+
+
 def main():
     access_token = get_access_token()
     response = send_request(access_token)
-    parse_response(response)
+    liked_songs_df = parse_response_liked_songs(response)
 
 
 if __name__ == '__main__':
