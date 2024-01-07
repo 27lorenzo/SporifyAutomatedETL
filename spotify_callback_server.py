@@ -5,8 +5,8 @@ app = Flask(__name__)
 auth_code = None
 auth_url = 'https://accounts.spotify.com/authorize'
 redirect_uri = 'http://localhost:8888/callback'
-# scope = 'user-read-recently-played'
-scope = 'user-library-read'
+scope = 'user-library-read playlist-modify-public playlist-modify-private'
+
 
 @app.route('/authorize')
 def authorize():

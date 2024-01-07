@@ -1,20 +1,14 @@
 import pandas as pd
 import requests
 import json
-from datetime import datetime
-from get_access_token import refresh_access_token
+from get_access_token import get_access_token
 
 base_url = 'https://api.spotify.com/v1/'
 
 
 def read_access_token():
-    session = load_session()
-    if session and 'refresh_token' in session and session['expires_at'] > datetime.now().timestamp():
-        print("Using existing session.")
-        return session['access_token']
-    elif session and 'refresh_token' in session and datetime.now().timestamp() > session['expires_at']:
-        print("Access token has expired. Refreshing...")
-        return refresh_access_token(session['refresh_token'])
+    access_token = get_access_token()
+    return access_token
 
 
 def load_session():
@@ -76,7 +70,10 @@ def main():
             recommendations_df['artists'] = recommendations_df['artists'].apply(
                 lambda artists: ', '.join([artist['name'] for artist in artists])
             )
-            print(recommendations_df[selected_columns].to_string(index=False))
+            recommended_songs_df = recommendations_df[selected_columns]
+            path_csv = 'dataframes/recommended_songs.csv'
+            recommended_songs_df.to_csv(path_csv, index=False)
+            print(recommended_songs_df)
         else:
             print("No recommendations could be obtained")
 

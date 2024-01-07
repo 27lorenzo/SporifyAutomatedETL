@@ -1,6 +1,5 @@
 import pandas as pd
 import requests
-from datetime import datetime, timedelta
 import config
 from get_access_token import get_access_token
 
@@ -12,10 +11,6 @@ def send_request(access_token, limit=50, next_url=None):
     headers = {
         'Authorization': 'Bearer {}'.format(access_token)
     }
-    # today = datetime.now()
-    # yesterday = today - timedelta(days=1)
-    # yesterday_unix_timestamp = int(yesterday.timestamp()) * 1000
-    # endpoint_rp = f'me/player/recently-played?limit=50&after={yesterday_unix_timestamp}'
     endpoint_liked_songs = 'me/tracks'
     url = next_url or ''.join([base_url, endpoint_liked_songs])
     print(f"Request URL: {url}")
@@ -30,40 +25,6 @@ def send_request(access_token, limit=50, next_url=None):
     elif r.status_code != 200:
         print(f"Error: {r.status_code}")
     return r
-
-
-def parse_response_recently_played(r):
-    if r.status_code != 200:
-        print(f"Error: {r.status_code}")
-        return None
-
-    try:
-        data = r.json()
-    except requests.exceptions.JSONDecodeError:
-        print("Error decoding JSON")
-        return None
-    song_names = []
-    artist_names = []
-    played_at_list = []
-    timestamps = []
-
-    # Extracting only the relevant bits of data from the json object
-    for song in data["items"]:
-        song_names.append(song["track"]["name"])
-        artist_names.append(song["track"]["album"]["artists"][0]["name"])
-        played_at_list.append(song["played_at"])
-        timestamps.append(song["played_at"][0:10])
-
-    # Prepare a dictionary in order to turn it into a pandas dataframe below
-    song_dict = {
-        "song_name": song_names,
-        "artist_name": artist_names,
-        "played_at": played_at_list,
-        "timestamp": timestamps
-    }
-    song_df = pd.DataFrame(song_dict, columns=["song_name", "artist_name", "played_at", "timestamp"])
-    print(song_df.to_string())
-    return song_df
 
 
 def parse_response_liked_songs(r, liked_songs_df):
@@ -128,6 +89,7 @@ def main():
 
     path_csv = 'dataframes/liked_songs.csv'
     liked_songs_df.to_csv(path_csv, index=False)
+
 
 if __name__ == '__main__':
     c = config.config()
