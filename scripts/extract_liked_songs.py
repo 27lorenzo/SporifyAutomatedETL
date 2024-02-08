@@ -1,9 +1,15 @@
 import pandas as pd
 import requests
-import config
-from get_access_token import get_access_token
+import sys
+import os
 
 base_url = 'https://api.spotify.com/v1/'
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(current_dir)
+
+import config
+from get_access_token import get_access_token
 
 
 def send_request(access_token, limit=50, next_url=None):
@@ -61,7 +67,7 @@ def parse_response_liked_songs(r, liked_songs_df):
     liked_songs_df = pd.concat([liked_songs_df, songs_df], ignore_index=True)
 
     print(liked_songs_df.to_string())
-    path_csv = 'dataframes/liked_songs.csv'
+    path_csv = '../dataframes/liked_songs.csv'
     liked_songs_df.to_csv(path_csv, index=False)
     return liked_songs_df
 
@@ -85,7 +91,7 @@ def main():
         else:
             break
 
-    path_csv = 'dataframes/liked_songs.csv'
+    path_csv = '../dataframes/liked_songs.csv'
     liked_songs_df.to_csv(path_csv, index=False)
 
 

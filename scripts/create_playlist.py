@@ -2,11 +2,14 @@ import requests
 import csv
 from get_access_token import get_access_token
 import json
+import os
+import base64
+
 
 base_url = 'https://api.spotify.com/v1/'
 auth_url = 'http://localhost:8888/authorize'
 redirect_uri = 'http://localhost:8888/callback'
-playlist_name = 'Recommended Songs by Python'
+playlist_name = 'New fresh weekly songs by Python & Airflow'
 playlist_description = 'Playlist created by Spotify API'
 
 
@@ -17,7 +20,7 @@ def read_access_token():
 
 def load_session():
     try:
-        with open("session/session.json", "r") as file:
+        with open("../session/session.json", "r") as file:
             return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         return None
@@ -41,11 +44,14 @@ def create_playlist_if_not_exists(access_token):
     if existing_playlist:
         # If exists, add the new songs
         playlist_id = existing_playlist['id']
+        set_cover_image(access_token, playlist_id)
         add_songs_to_existing_playlist(access_token, playlist_id)
+
     else:
         # If not, create new playlist
         playlist = create_new_playlist(access_token)
         playlist_id = playlist['id']
+        set_cover_image(access_token, playlist_id)
         add_songs_to_existing_playlist(access_token, playlist_id)
 
 
@@ -65,8 +71,32 @@ def create_new_playlist(access_token):
         return None
 
 
+def set_cover_image(access_token, playlist_id):
+    endpoint_cover_image = f'playlists/{playlist_id}/images'
+    url_cover_image = ''.join([base_url, endpoint_cover_image])
+
+    cover_image_path = '../images/spotify-playlist-cover-image.jpeg'
+
+    try:
+        if not os.path.exists(cover_image_path):
+            print(f"Error: The image '{cover_image_path}' does not exist.")
+            return
+        with open(cover_image_path, 'rb') as image_file:
+            cover_image = image_file.read()
+            base64_image = base64.b64encode(cover_image)
+    except Exception as e:
+        print(f'Error: {e}')
+    headers = {'Authorization': 'Bearer ' + access_token, 'Content-Type': 'image/jpeg'}
+    response = requests.put(url_cover_image, headers=headers, data=base64_image)
+
+    if response.status_code == 202:
+        print('Cover image successfully set.')
+    else:
+        print('Error setting cover image.')
+
+
 def add_songs_to_existing_playlist(access_token, playlist_id):
-    with open('dataframes/recommended_songs.csv', newline='', encoding='utf-8') as csvfile:
+    with open('../dataframes/recommended_songs.csv', newline='', encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         songs = [row['name'] for row in reader]
 

@@ -28,9 +28,9 @@ def get_access_token():
     # If no existing session or expired, perform Authorization Code Flow
 
     print(f"Please, visit the following link to authorize the application:\n{auth_url}")
-    while not os.path.exists("session/authorization_code.txt"):
+    while not os.path.exists("../session/authorization_code.txt"):
         time.sleep(1)
-    with open("session/authorization_code.txt", "r") as file:
+    with open("../session/authorization_code.txt", "r") as file:
         authorization_code = file.read().strip()
 
     print(f"Authorization code obtained: {authorization_code}")
@@ -83,12 +83,12 @@ def refresh_access_token(refresh_token):
 
 def load_session():
     try:
-        with open("session/session.json", "r") as file:
+        with open("../session/session.json", "r") as file:
             return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         return None
 
 
 def save_session(session):
-    with open("session/session.json", "w") as file:
+    with open("../session/session.json", "w") as file:
         json.dump(session, file)

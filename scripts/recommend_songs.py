@@ -13,7 +13,7 @@ def read_access_token():
 
 def load_session():
     try:
-        with open("session/session.json", "r") as file:
+        with open("../session/session.json", "r") as file:
             return json.load(file)
     except (FileNotFoundError, json.JSONDecodeError):
         return None
@@ -54,7 +54,7 @@ def get_recommendations(seed_tracks, seed_artists, access_token):
 
 def main():
     access_token = read_access_token()
-    liked_songs_df = pd.read_csv("dataframes/liked_songs.csv")
+    liked_songs_df = pd.read_csv("../dataframes/liked_songs.csv")
 
     liked_song_ids = liked_songs_df['track_id'].tolist()
     liked_song_artists = liked_songs_df['artist_id'].tolist()
@@ -71,7 +71,7 @@ def main():
                 lambda artists: ', '.join([artist['name'] for artist in artists])
             )
             recommended_songs_df = recommendations_df[selected_columns]
-            path_csv = 'dataframes/recommended_songs.csv'
+            path_csv = '../dataframes/recommended_songs.csv'
             recommended_songs_df.to_csv(path_csv, index=False)
             print(recommended_songs_df)
         else:

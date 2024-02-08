@@ -5,7 +5,7 @@ app = Flask(__name__)
 auth_code = None
 auth_url = 'https://accounts.spotify.com/authorize'
 redirect_uri = 'http://localhost:8888/callback'
-scope = 'user-library-read playlist-modify-public playlist-modify-private'
+scope = 'user-library-read playlist-modify-public playlist-modify-private ugc-image-upload'
 
 
 @app.route('/authorize')
@@ -21,7 +21,7 @@ def callback():
     print(f"Authorization Code: {auth_code}")
     print(f"Scope: {scope}")
 
-    with open("session/authorization_code.txt", "w") as file:
+    with open("../session/authorization_code.txt", "w") as file:
         file.write(auth_code)
         print("File created")
 
