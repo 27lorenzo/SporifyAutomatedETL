@@ -78,10 +78,8 @@ def main():
         if response is not None:
             liked_songs_df = parse_response_liked_songs(response, liked_songs_df)
 
-            # Obtener la URL siguiente de la respuesta JSON
+            # Obtaing next URL from JSON response
             next_url = response.json().get("next")
-
-            # Si no hay URL siguiente, salir del bucle
             if not next_url:
                 break
         else:
